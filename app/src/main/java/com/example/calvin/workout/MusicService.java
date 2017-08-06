@@ -204,4 +204,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public void onDestroy() {
         stopForeground(true);
     }
+
+    public int returnPosition() {
+        return position;
+    }
 }

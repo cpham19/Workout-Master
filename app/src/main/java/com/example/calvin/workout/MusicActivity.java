@@ -40,6 +40,7 @@ public class MusicActivity extends AppCompatActivity implements MediaPlayerContr
     private boolean musicBound = false;
     private boolean paused= false;
     private boolean playbackPaused = false;
+    private int previousViewPosition = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,7 @@ public class MusicActivity extends AppCompatActivity implements MediaPlayerContr
 
         songView = (ListView)findViewById(R.id.song_list);
 
-        songList = new ArrayList<SongModel>();
+        songList = new ArrayList<>();
 
         getSongList();
 
@@ -134,6 +135,14 @@ public class MusicActivity extends AppCompatActivity implements MediaPlayerContr
 
 
     public void songPicked(View view){
+        if (previousViewPosition != -1) {
+            View previousView = getViewByPosition(previousViewPosition, songView);
+            previousView.setBackgroundColor(0xffffffff);
+            previousView.invalidate();
+        }
+        previousViewPosition = Integer.parseInt(view.getTag().toString());
+        view.setBackgroundColor(0xff00ff00);
+        view.invalidate();
         musService.setSong(Integer.parseInt(view.getTag().toString()));
         musService.playSong();
 
@@ -172,12 +181,29 @@ public class MusicActivity extends AppCompatActivity implements MediaPlayerContr
         controller.setPrevNextListeners(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                previousViewPosition = musService.returnPosition();
+                View previousView = getViewByPosition(previousViewPosition, songView);
+                previousView.setBackgroundColor(0xffffffff);
+                previousView.invalidate();
                 playNext();
+                previousViewPosition = musService.returnPosition();
+                View currentView = getViewByPosition(previousViewPosition, songView);
+                currentView.setBackgroundColor(0xff00ff00);
+                currentView.invalidate();
+
             }
         }, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                previousViewPosition = musService.returnPosition();
+                View previousView = getViewByPosition(previousViewPosition, songView);
+                previousView.setBackgroundColor(0xffffffff);
+                previousView.invalidate();
                 playPrev();
+                previousViewPosition = musService.returnPosition();
+                View currentView = getViewByPosition(previousViewPosition, songView);
+                currentView.setBackgroundColor(0xff00ff00);
+                currentView.invalidate();
             }
         });
 
@@ -300,5 +326,17 @@ public class MusicActivity extends AppCompatActivity implements MediaPlayerContr
     protected void onStop() {
         controller.hide();
         super.onStop();
+    }
+
+    public View getViewByPosition(int pos, ListView listView) {
+        final int firstListItemPosition = listView.getFirstVisiblePosition();
+        final int lastListItemPosition = firstListItemPosition + listView.getChildCount() - 1;
+
+        if (pos < firstListItemPosition || pos > lastListItemPosition ) {
+            return listView.getAdapter().getView(pos, null, listView);
+        } else {
+            final int childIndex = pos - firstListItemPosition;
+            return listView.getChildAt(childIndex);
+        }
     }
 }
